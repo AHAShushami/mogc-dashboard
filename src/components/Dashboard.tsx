@@ -6,11 +6,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
     from 'recharts';
 import { Upload, FileSpreadsheet, Users, Activity, AlertCircle } from 'lucide-react';
 import AddPatientForm from './AddPatientForm';
+import PatientList from './PatientList';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 const API_URL = "https://script.google.com/macros/s/AKfycbw6RixyCNFAJGCDChVJA0KU_iaqy3jNYVibpBWVemwi25fIOv_Wr6mM1rkFJdLyEoteeg/exec";
-
-import PatientList from './PatientList';
 
 export default function Dashboard() {
     const [patients, setPatients] = useState<Patient[]>([]);
@@ -22,6 +21,7 @@ export default function Dashboard() {
         active: 0
     });
     const [activeTab, setActiveTab] = useState<'overview' | 'patients' | 'add'>('overview');
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchData();
@@ -29,22 +29,33 @@ export default function Dashboard() {
 
     const fetchData = async () => {
         setLoading(true);
+        setError(null);
         try {
             const response = await fetch(API_URL);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const data = await response.json();
 
-            // Handle error from API
+            // Handle error from API object if it returns one
             if (data.error) {
                 console.error("API Error:", data.error);
-                alert("Error fetching data: " + data.error);
+                setError("API Error: " + data.error);
+                return;
+            }
+
+            // Validate data is an array
+            if (!Array.isArray(data)) {
+                console.error("API returned non-array:", data);
+                setError("Received invalid data format from server (expected array).");
                 return;
             }
 
             setPatients(data);
             calculateStats(data);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to fetch data", error);
-            alert("Failed to connect to Google Sheets.");
+            setError("Failed to connect to backend: " + (error.message || "Unknown error"));
         } finally {
             setLoading(false);
         }
@@ -117,12 +128,25 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {patients.length === 0 ? (
+            {patients.length === 0 && !error ? (
                 <Card className="border-dashed border-2 py-12 flex flex-col items-center justify-center text-slate-400">
                     <Upload className="w-12 h-12 mb-4" />
                     <p className="text-lg">Upload your MOGC Excel file to get started</p>
                 </Card>
-            ) : (
+            ) : null}
+
+            {error && (
+                <Card className="border-red-200 bg-red-50 py-12 flex flex-col items-center justify-center text-red-600">
+                    <AlertCircle className="w-12 h-12 mb-4" />
+                    <p className="text-lg font-bold">Error loading data</p>
+                    <p className="text-sm">{error}</p>
+                    <Button variant="outline" className="mt-4 border-red-200 hover:bg-red-100" onClick={fetchData}>
+                        Retry
+                    </Button>
+                </Card>
+            )}
+
+            {patients.length > 0 && (
                 <>
                     <div className="flex space-x-2 border-b">
                         <button
