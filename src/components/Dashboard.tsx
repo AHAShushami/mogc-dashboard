@@ -8,7 +8,7 @@ import { Upload, FileSpreadsheet, Users, Activity, AlertCircle } from 'lucide-re
 import AddPatientForm from './AddPatientForm';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-const API_URL = "https://script.google.com/macros/s/AKfycbw6RixyCNFAJGCDChVJA0KU_iaqy3jNYVibpBWVemwi25fIO_Wr6mM1rkFJdLyEoteeg/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbw6RixyCNFAJGCDChVJA0KU_iaqy3jNYVibpBWVemwi25fIOv_Wr6mM1rkFJdLyEoteeg/exec";
 
 import PatientList from './PatientList';
 
